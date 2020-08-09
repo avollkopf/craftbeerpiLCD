@@ -20,7 +20,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
 
 from collections import namedtuple
 
@@ -146,7 +145,7 @@ class BaseCharLCD(object):
     def _set_cursor_pos(self, value):
         if not hasattr(value, '__getitem__') or len(value) != 2:
             raise ValueError('Cursor position should be determined by a 2-tuple.')
-        if value[0] not in range(self.lcd.rows) or value[1] not in range(self.lcd.cols):
+        if value[0] not in list(range(self.lcd.rows)) or value[1] not in list(range(self.lcd.cols)):
             msg = 'Cursor position {pos!r} invalid on a {lcd.rows}x{lcd.cols} LCD.'
             raise ValueError(msg.format(pos=value, lcd=self.lcd))
         row_offsets = [0x00, 0x40, self.lcd.cols, 0x40 + self.lcd.cols]

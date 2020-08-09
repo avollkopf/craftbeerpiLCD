@@ -11,7 +11,7 @@ import datetime
 import threading
 from time import gmtime, strftime
 from modules import app, cbpi
-from i2c import CharLCD
+from .i2c import CharLCD
 
 # LCDVERSION = '4.0.00' The LCD-library and LCD-driver are taken from RPLCD Project version 1.0. The documentation:
 # http://rplcd.readthedocs.io/en/stable/ very good and readable. Git is here: https://github.com/dbrgn/RPLCD.
@@ -183,11 +183,10 @@ def get_ip(interface):
     ip_addr = "Not Connected"
     so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        ip_addr = socket.inet_ntoa(fcntl.ioctl(so.fileno(), 0x8915, struct.pack('256s', interface[:15]))[20:24])
+        ip_addr = socket.inet_ntoa(fcntl.ioctl(so.fileno(), 0x8915, struct.pack('256s', bytes(interface.encode())[:15]))[20:24])
     finally:
         pass
     return ip_addr
-
 
 def get_version_fo(path):
     version = ""
@@ -204,42 +203,42 @@ def get_version_fo(path):
 
 def show_multidisplay(refresh, charmap):
     s = cbpi.cache.get("active_step")
-    for idx, value in cbpi.cache["kettle"].items():
+    for idx, value in list(cbpi.cache["kettle"].items()):
         current_sensor_value = (cbpi.get_sensor_value(value.sensor))
 
         heater_of_kettle = int(cbpi.cache.get("kettle").get(value.id).heater)
         heater_status = int(cbpi.cache.get("actors").get(heater_of_kettle).state)
 
-        line1 = (u'%s' % (cbidecode(s.name, charmap))[:20])
+        line1 = ('%s' % (cbidecode(s.name, charmap))[:20])
 
         # line2 when steptimer is running show remaining time and kettlename
         try:
             if s.timer_end is not None:
-                time_remaining = time.strftime(u"%H:%M:%S", time.gmtime(s.timer_end - time.time()))
-                line2 = ((u"%s %s" % (cbidecode(value.name, charmap).ljust(12)[:11], time_remaining)).ljust(20)[:20])
+                time_remaining = time.strftime("%H:%M:%S", time.gmtime(s.timer_end - time.time()))
+                line2 = (("%s %s" % (cbidecode(value.name, charmap).ljust(12)[:11], time_remaining)).ljust(20)[:20])
             else:
-                line2 = (u'%s' % cbidecode(value.name, charmap))[:20]
+                line2 = ('%s' % cbidecode(value.name, charmap))[:20]
         except:
-            line2 = u"no kettle name"
+            line2 = "no kettle name"
             pass
 
         # line3
-        line3 = (u"Targ. Temp:%6.2f%s%s" % (float(value.target_temp), u"°", lcd_unit))[:20]
+        line3 = ("Targ. Temp:%6.2f%s%s" % (float(value.target_temp), "°", lcd_unit))[:20]
 
         # line4 needs error handling because there may be temp value without
         # sensor dates and so it is none and than an error is thrown
         try:
-            line4 = (u"Curr. Temp:%6.2f%s%s" % (float(current_sensor_value), u"°", lcd_unit))[:20]
+            line4 = ("Curr. Temp:%6.2f%s%s" % (float(current_sensor_value), "°", lcd_unit))[:20]
         except:
             cbpi.app.logger.info("LCDDisplay  - current_sensor_value exception %s" % current_sensor_value)
-            line4 = (u"Curr. Temp: %s" % "No Data")[:20]
+            line4 = ("Curr. Temp: %s" %  "No Data")[:20]
 
         lcd.clear()
         lcd.cursor_pos = (0, 0)
         lcd.write_string(line1)
         lcd.cursor_pos = (0, 19)
         if heater_status != 0:
-            lcd.write_string(u"\x00")
+            lcd.write_string("\x00")
         lcd.cursor_pos = (1, 0)
         lcd.write_string(line2)
         lcd.cursor_pos = (2, 0)
@@ -264,37 +263,37 @@ def show_singlemode(kettleid1, blink, charmap):
     # cbpi.app.logger.info("LCDDisplay  - heater status (0=off, 1=on) %s" % (heater_status))
 
     # line1 the stepname
-    line1 = (u'%s' % (cbidecode(s.name, charmap)).ljust(20)[:20])
+    line1 = ('%s' % (cbidecode(s.name, charmap)).ljust(20)[:20])
 
     # line2 when steptimer is running show remaining time and kettlename
     if s.timer_end is not None:
-        time_remaining = time.strftime(u"%H:%M:%S", time.gmtime(s.timer_end - time.time()))
-        line2 = ((u"%s %s" % (
+        time_remaining = time.strftime("%H:%M:%S", time.gmtime(s.timer_end - time.time()))
+        line2 = (("%s %s" % (
             cbidecode(cbpi.cache.get("kettle")[kettleid1].name, charmap).ljust(12)[:11], time_remaining)).ljust(20)[
                  :20])
     else:
-        line2 = ((u'%s' % (cbidecode(cbpi.cache.get("kettle")[kettleid1].name, charmap))).ljust(20)[:20])
+        line2 = (('%s' % (cbidecode(cbpi.cache.get("kettle")[kettleid1].name, charmap))).ljust(20)[:20])
 
     # line3
-    line3 = (u"Targ. Temp:%6.2f%s%s" % (float(cbpi.cache.get("kettle")[kettleid1].target_temp), u"°", lcd_unit)).ljust(
+    line3 = ("Targ. Temp:%6.2f%s%s" % (float(cbpi.cache.get("kettle")[kettleid1].target_temp), "°", lcd_unit)).ljust(
         20)[:20]
 
     # line4 needs error handling because there may be temp value without
     # sensor dates and so it is none and than an error is thrown
     try:
-        line4 = (u"Curr. Temp:%6.2f%s%s" % (float(current_sensor_value_id1), u"°", lcd_unit)).ljust(20)[:20]
+        line4 = ("Curr. Temp:%6.2f%s%s" % (float(current_sensor_value_id1), "°", lcd_unit)).ljust(20)[:20]
     except:
         cbpi.app.logger.info(
             "LCDDisplay  - single mode current_sensor_value_id1 exception %s" % current_sensor_value_id1)
-        line4 = (u"Curr. Temp: %s" % "No Data")[:20]
+        line4 = ("Curr. Temp: %s" % "No Data")[:20]
 
     lcd.cursor_pos = (0, 0)
     lcd.write_string(line1)
     lcd.cursor_pos = (0, 19)
     if blink is False and heater_status != 0:
-        lcd.write_string(u"\x00")
+        lcd.write_string("\x00")
     else:
-        lcd.write_string(u" ")
+        lcd.write_string(" ")
     lcd.cursor_pos = (1, 0)
     lcd.write_string(line2)
     lcd.cursor_pos = (2, 0)
@@ -304,7 +303,7 @@ def show_singlemode(kettleid1, blink, charmap):
 
 
 def show_fermentation_multidisplay(refresh, charmap):
-    for idx, value in cbpi.cache["fermenter"].items():
+    for idx, value in list(cbpi.cache["fermenter"].items()):
         current_sensor_value = (cbpi.get_sensor_value(value.sensor))
         # INFO value = modules.fermenter.Fermenter
         # INFO FermenterId = modules.fermenter.Fermenter.id
@@ -331,31 +330,41 @@ def show_fermentation_multidisplay(refresh, charmap):
             fcooler_status = 0
         pass
 
-        line1 = (u'%s' % (cbidecode(value.brewname, charmap))[:20])
+        line1 = ('%s' % (cbidecode(value.brewname, charmap))[:20])
         # line2
         z = 0
         # todo: line2 = u"no kettle name"
-        for key, value1 in cbpi.cache["fermenter_task"].items():
+        for key, value1 in list(cbpi.cache["fermenter_task"].items()):
             # INFO value1 = modules.fermenter.FermenterStep
             # cbpi.app.logger.info("LCDDisplay  - value1 %s" % (value1.fermenter_id))
             if value1.timer_start is not None and value1.fermenter_id == value.id:
                 line2 = interval(cbidecode(value.name, charmap), (value1.timer_start - time.time()))
                 z = 1
             elif z == 0:
-                line2 = (u'%s' % (cbidecode(value.name, charmap))[:20])
+                line2 = ('%s' % (cbidecode(value.name, charmap))[:20])
             pass
 
         # line3
-        line3 = (u"Targ. Temp:%6.2f%s%s" % (float(value.target_temp), u"°", lcd_unit))[:20]
+        try:
+            line3 = ("Set/Act:%5.1f/%4.1f%s%s" % (float(value.target_temp), float(current_sensor_value), "°", lcd_unit))[:20]
+        except:
+            cbpi.app.logger.info("LCDDisplay  - fermentmode current_sensor_value exception %s" % current_sensor_value)
+            line3 = ("Set/Act:%5.1f/ N/A%s%s" % (float(value.target_temp), "°", lcd_unit))[:20]
+            
+
 
         # line4
         # needs errorhandling because there may be tempvalue without sensordates and
         # so it is none and than an error is thrown
-        try:
-            line4 = (u"Curr. Temp:%6.2f%s%s" % (float(current_sensor_value), u"°", lcd_unit))[:20]
-        except:
-            cbpi.app.logger.info("LCDDisplay  - fermentmode current_sensor_value exception %s" % current_sensor_value)
-            line4 = (u"Curr. Temp: %s" % "No Data")[:20]
+#        if current_gravity_value:
+#        line4 = ("Gravity: %4.1f" % (float(current_gravity_value),"°P"))[:20]
+#        else:
+        line4="             "[:20]
+#        try:
+#            line4 = ("Curr. Temp:%6.1f%s%s" % (float(current_sensor_value), "°", lcd_unit))[:20]
+#        except:
+#            cbpi.app.logger.info("LCDDisplay  - fermentmode current_sensor_value exception %s" % current_sensor_value)
+#            line4 = ("Curr. Temp: %s" % "No Data")[:20]
         pass
 
         lcd.clear()
@@ -363,9 +372,9 @@ def show_fermentation_multidisplay(refresh, charmap):
         lcd.write_string(line1)
         lcd.cursor_pos = (0, 19)
         if fheater_status != 0:
-            lcd.write_string(u"\x00")
+            lcd.write_string("\x00")
         if fcooler_status != 0:
-            lcd.write_string(u"\x01")
+            lcd.write_string("\x01")
         lcd.cursor_pos = (1, 0)
         lcd.write_string(line2)
         lcd.cursor_pos = (2, 0)
@@ -378,7 +387,7 @@ def show_fermentation_multidisplay(refresh, charmap):
 
 
 def is_fermenter_step_running():
-    for key, value2 in cbpi.cache["fermenter_task"].items():
+    for key, value2 in list(cbpi.cache["fermenter_task"].items()):
         if value2.state == "A":
             return "active"
         else:
@@ -387,27 +396,27 @@ def is_fermenter_step_running():
 
 def show_standby(ipdet, cbpi_version, charmap):
     lcd.cursor_pos = (0, 0)
-    lcd.write_string((u"CraftBeerPi %s" % cbpi_version).ljust(20))
+    lcd.write_string(("CraftBeerPi %s" % cbpi_version).ljust(20))
     lcd.cursor_pos = (1, 0)
     lcd.write_string(
-        (u"%s" % (cbidecode(cbpi.get_config_parameter("brewery_name", "No Brewery"), charmap))).ljust(20)[:20])
+        ("%s" % (cbidecode(cbpi.get_config_parameter("brewery_name", "No Brewery"), charmap))).ljust(20)[:20])
     lcd.cursor_pos = (2, 0)
-    lcd.write_string((u"IP: %s" % ipdet).ljust(20)[:20])
+    lcd.write_string("IP: %s" % ipdet.ljust(20)[:20])
     lcd.cursor_pos = (3, 0)
-    lcd.write_string((strftime(u"%Y-%m-%d %H:%M:%S", time.localtime())).ljust(20))
+    lcd.write_string(strftime("%Y-%m-%d %H:%M:%S", time.localtime()).ljust(20))
     pass
 
 
 def cbidecode(string, charmap="A00"):  # Changes some german Letters to be displayed
     # todo:  check if A00 is used and skip changes if A02 ist used
     if charmap == "A00":
-        if DEBUG: cbpi.app.logger.info('LCDDisplay  - string: %s' % string)
-        replaced_text = string.replace(u"Ä", u"\x02").replace(u"Ö", u"\x03").replace(u"Ü", u"\x04").replace(u"ß",
-                                                                                                            u"\x05")
-        if DEBUG: cbpi.app.logger.info('LCDDisplay  - replaced_text: %s' % replaced_text)
+        if DEBUG: cbpi.app.logger.info(str('LCDDisplay  - string: %s' % str(string)))
+        replaced_text = string.replace("Ä", "\x02").replace("Ö", "\x03").replace("Ü", "\x04").replace("ß",
+                                                                                                            "\x05")
+        if DEBUG: cbpi.app.logger.info(str('LCDDisplay  - replaced_text: %s' % str(replaced_text)))
         return replaced_text
     else:
-        return string
+        return str(string)
     pass
 
 
@@ -433,14 +442,14 @@ def interval(fermentername, seconds):
     seconds = seconds % MINUTE
 
     if weeks >= 1:
-        remaining_time = (u"W%d D%d %02d:%02d" % (int(weeks), int(days), int(hours), int(minutes)))
-        return (u"%s %s" % (fermentername.ljust(8)[:7], remaining_time))[:20]
+        remaining_time = ("W%d D%d %02d:%02d" % (int(weeks), int(days), int(hours), int(minutes)))
+        return ("%s %s" % (fermentername.ljust(8)[:7], remaining_time))[:20]
     elif weeks == 0 and days >= 1:
-        remaining_time = (u"D%d %02d:%02d:%02d" % (int(days), int(hours), int(minutes), int(seconds)))
-        return (u"%s %s" % (fermentername.ljust(8)[:7], remaining_time))[:20]
+        remaining_time = ("D%d %02d:%02d:%02d" % (int(days), int(hours), int(minutes), int(seconds)))
+        return ("%s %s" % (fermentername.ljust(8)[:7], remaining_time))[:20]
     elif weeks == 0 and days == 0:
-        remaining_time = (u"%02d:%02d:%02d" % (int(hours), int(minutes), int(seconds)))
-        return (u"%s %s" % (fermentername.ljust(11)[:10], remaining_time))[:20]
+        remaining_time = ("%02d:%02d:%02d" % (int(hours), int(minutes), int(seconds)))
+        return ("%s %s" % (fermentername.ljust(11)[:10], remaining_time))[:20]
     else:
         pass
     pass
@@ -450,22 +459,22 @@ def interval(fermentername, seconds):
 def init(cbpi):
     global LCDaddress
     LCDaddress = int(set_lcd_address(), 16)
-    cbpi.app.logger.info('LCDDisplay  - LCD_Address %s' % (set_lcd_address()))
+    cbpi.app.logger.info('LCDDisplay  - LCD_Address %s' % str((set_lcd_address())))
 
     characters = str(set_charmap())
-    cbpi.app.logger.info("LCDDisplay  - character map used %s" % characters)
+    cbpi.app.logger.info("LCDDisplay  - character map used %s" % str(characters))
 
     # This is just for the logfile at start
     refreshlog = float(set_parameter_refresh())
-    cbpi.app.logger.info('LCDDisplay  - Refreshrate %s' % refreshlog)
+    cbpi.app.logger.info('LCDDisplay  - Refreshrate %s' % str(refreshlog))
 
     # This is just for the logfile at start
     multidisplaylog = str(set_parameter_multidisplay())
-    cbpi.app.logger.info('LCDDisplay  - Multidisplay %s' % multidisplaylog)
+    cbpi.app.logger.info('LCDDisplay  - Multidisplay %s' % str(multidisplaylog))
 
     # This is just for the logfile at start
     id1log = int(set_parameter_id1())
-    cbpi.app.logger.info("LCDDisplay  - Kettlenumber used %s" % id1log)
+    cbpi.app.logger.info("LCDDisplay  - Kettlenumber used %s" % str(id1log))
 
     global lcd
     try:
@@ -483,7 +492,7 @@ def init(cbpi):
     global lcd_unit
     try:
         lcd_unit = cbpi.get_config_parameter("unit", None)
-        cbpi.app.logger.info("LCDDisplay  - unit used %s" % lcd_unit)
+        cbpi.app.logger.info("LCDDisplay  - unit used %s" % str(lcd_unit))
     except:
         pass
 

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, division, absolute_import, unicode_literals
 
 from ..common import sliding_window
 from . import hd44780_a00, hd44780_a02
