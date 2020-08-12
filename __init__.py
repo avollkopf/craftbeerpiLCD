@@ -307,6 +307,21 @@ def show_fermentation_multidisplay(refresh, charmap):
         current_sensor_value = (cbpi.get_sensor_value(value.sensor))
         # INFO value = modules.fermenter.Fermenter
         # INFO FermenterId = modules.fermenter.Fermenter.id
+        gravity_sensor = False
+        sensor2_of_fermenter = int(cbpi.cache.get("fermenter").get(value.id).sensor2)
+        sensor2_type = cbpi.cache.get("sensors").get(sensor2_of_fermenter).type
+        print("Sensor Type %s" % sensor2_type)
+        if (sensor2_type == "iSpindel"):
+            sensor2_data_type = cbpi.cache.get("sensors").get(sensor2_of_fermenter).config["sensorType"]
+            print("Sensor2 Data Type %s" % sensor2_data_type) 
+            if (sensor2_data_type == "Gravity"):
+                sensor2_data_unit = cbpi.cache.get("sensors").get(sensor2_of_fermenter).config["unitsGravity"]
+                print("Sensor2 Units: %s" % sensor2_data_unit)
+                gravity_sensor=True
+                try:
+                    current_gravity_value = (cbpi.get_sensor_value(value.sensor2))
+                except:
+                    current_gravity_value = None
 
         # get the state of the heater of the current fermenter, if there is none, except takes place
         try:
@@ -345,26 +360,33 @@ def show_fermentation_multidisplay(refresh, charmap):
             pass
 
         # line3
-        try:
-            line3 = ("Set/Act:%5.1f/%4.1f%s%s" % (float(value.target_temp), float(current_sensor_value), "°", lcd_unit))[:20]
-        except:
-            cbpi.app.logger.info("LCDDisplay  - fermentmode current_sensor_value exception %s" % current_sensor_value)
-            line3 = ("Set/Act:%5.1f/ N/A%s%s" % (float(value.target_temp), "°", lcd_unit))[:20]
-            
+        if (gravity_sensor == True):
+            try:
+                line3 = ("Set/Act:%5.1f/%4.1f%s%s" % (float(value.target_temp), float(current_sensor_value), "°", lcd_unit))[:20]
+            except:
+                cbpi.app.logger.info("LCDDisplay  - fermentmode current_sensor_value exception %s" % current_sensor_value)
+                line3 = ("Set/Act:%5.1f/ N/A%s%s" % (float(value.target_temp), "°", lcd_unit))[:20]
+        else:        
+            line3 = ("Targ. Temp: %6.1f%s%s" % (float(value.target_temp), "°", lcd_unit))[:20]
 
 
         # line4
         # needs errorhandling because there may be tempvalue without sensordates and
         # so it is none and than an error is thrown
-#        if current_gravity_value:
-#        line4 = ("Gravity: %4.1f" % (float(current_gravity_value),"°P"))[:20]
-#        else:
-        line4="             "[:20]
-#        try:
-#            line4 = ("Curr. Temp:%6.1f%s%s" % (float(current_sensor_value), "°", lcd_unit))[:20]
-#        except:
-#            cbpi.app.logger.info("LCDDisplay  - fermentmode current_sensor_value exception %s" % current_sensor_value)
-#            line4 = ("Curr. Temp: %s" % "No Data")[:20]
+        if (gravity_sensor == True):
+            if current_gravity_value != None and current_gravity_value != 0:
+                if sensor2_data_unit != "SG":
+                    line4 = ("Gravity:%4.1f%s" % (float(current_gravity_value), sensor2_data_unit))[:20]
+                else:
+                    line4 = ("Gravity:%5.3f%s" % (float(current_gravity_value), sensor2_data_unit))[:20]
+            else:
+                line4="             "[:20]
+        else:
+            try:
+                line4 = ("Curr. Temp: %6.1f%s%s" % (float(current_sensor_value), "°", lcd_unit))[:20]
+            except:
+                cbpi.app.logger.info("LCDDisplay  - fermentmode current_sensor_value exception %s" % current_sensor_value)
+                line4 = ("Curr. Temp: %s" % "No Data")[:20]
         pass
 
         lcd.clear()

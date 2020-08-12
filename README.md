@@ -30,6 +30,12 @@ Download and install this plugin via the CraftBeerPi user interface. It is calle
 After that a reboot is necessary.
 
 ## Configuration
+Update 2020-08-12
+- Python 3 support
+- Support for iSpindle Gravity data
+- iSpindle Gravity sensor type needs to be configured and used as sensor2
+- LCD disply will display current gravity in line 4 of LCD display
+- It may take some time to display gravity vlaue until next reading from spindle is available
 
 At least configure your i2c address in the parameters menu. Some other
 parameters of the LCD can be changed in the 
