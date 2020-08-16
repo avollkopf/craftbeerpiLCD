@@ -30,6 +30,13 @@ Download and install this plugin via the CraftBeerPi user interface. It is calle
 After that a reboot is necessary.
 
 ## Configuration
+
+Update 2020-08-16
+- Added support for hop addition countdown timers
+- Boil step name has to be set to 'Boil'
+- hop steps of the step have to be named hop_1 ... hop_5 which is standard for the default Boilstep
+- 5 hop steps are currently possible
+
 Update 2020-08-12
 - Python 3 support
 - Support for iSpindle Gravity data
