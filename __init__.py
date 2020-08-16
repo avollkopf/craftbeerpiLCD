@@ -200,6 +200,35 @@ def get_version_fo(path):
     finally:
         return version
 
+def get_next_hop_timer(hop1,hop2,hop3,hop4,hop5,time_left):
+    hop_timers = []
+    if hop1 != None:
+        hop1_left = time_left - hop1
+        if hop1_left > 0:
+            hop_timers.append(hop1_left)
+    if hop2 != None:
+        hop2_left = time_left - hop2
+        if hop2_left > 0:
+            hop_timers.append(hop2_left)
+    if hop3 != None:
+        hop3_left = time_left - hop3
+        if hop3_left > 0:
+            hop_timers.append(hop3_left)
+    if hop4 != None:
+        hop4_left = time_left - hop4
+        if hop4_left > 0:
+            hop_timers.append(hop4_left)
+    if hop5 != None:
+        hop5_left = time_left - hop5
+        if hop5_left > 0:
+            hop_timers.append(hop5_left)
+    if len(hop_timers) != 0:
+        next_hop_timer = time.strftime("%H:%M:%S", time.gmtime(min(hop_timers)))
+    else:
+        next_hop_timer = None
+#    print(next_hop_timer)
+    return next_hop_timer
+    pass
 
 def show_multidisplay(refresh, charmap):
     s = cbpi.cache.get("active_step")
@@ -210,6 +239,31 @@ def show_multidisplay(refresh, charmap):
         heater_status = int(cbpi.cache.get("actors").get(heater_of_kettle).state)
 
         line1 = ('%s' % (cbidecode(s.name, charmap))[:20])
+        next_hop_alert = None
+        if s.name == 'Boil' and s.timer_end is not None:
+            try:
+                hop1 = int(getattr(s,'hop_1'))*60
+            except:
+                hop1 = None
+            try:
+                hop2 = int(getattr(s,'hop_2'))*60
+            except:
+                hop2 = None           
+            try:
+                hop3 = int(getattr(s,'hop_3'))*60
+            except:
+                hop3 = None
+            try:
+                hop4 = int(getattr(s,'hop_4'))*60
+            except:
+                hop4 = None
+            try:
+                hop5 = int(getattr(s,'hop_5'))*60
+            except:
+                hop5 = None           
+            time_left = (s.timer_end - time.time())
+            next_hop_alert = get_next_hop_timer(hop1,hop2,hop3,hop4,hop5,time_left)
+
 
         # line2 when steptimer is running show remaining time and kettlename
         try:
@@ -223,15 +277,26 @@ def show_multidisplay(refresh, charmap):
             pass
 
         # line3
-        line3 = ("Targ. Temp:%6.2f%s%s" % (float(value.target_temp), "°", lcd_unit))[:20]
-
-        # line4 needs error handling because there may be temp value without
-        # sensor dates and so it is none and than an error is thrown
-        try:
-            line4 = ("Curr. Temp:%6.2f%s%s" % (float(current_sensor_value), "°", lcd_unit))[:20]
-        except:
-            cbpi.app.logger.info("LCDDisplay  - current_sensor_value exception %s" % current_sensor_value)
-            line4 = ("Curr. Temp: %s" %  "No Data")[:20]
+        if s.name != 'Boil':
+            line3 = ("Targ. Temp:%6.2f%s%s" % (float(value.target_tem), "°", lcd_unit))[:20]
+    
+            # line4 needs error handling because there may be temp value without
+            # sensor dates and so it is none and than an error is thrown
+            try:
+                line4 = ("Curr. Temp:%6.2f%s%s" % (float(current_sensor_value), "°", lcd_unit))[:20]
+            except:
+                cbpi.app.logger.info("LCDDisplay  - current_sensor_value exception %s" % current_sensor_value)
+                line4 = ("Curr. Temp: %s" %  "No Data")[:20]
+        else:
+            try:
+                line3 = ("Set/Act:%4.0f/%5.1f%s%s" % (float(value.target_temp), float(current_sensor_value),"°",lcd_unit))[:20]
+            except:
+                cbpi.app.logger.info("LCDDisplay  - current_sensor_value exception %s" % current_sensor_value)
+                line3 = ("Set/Act:%4.0f/ N/A%s%s" % (float(value.target_temp), float(current_sensor_value),"°",lcd_unit))[:20]
+            if next_hop_alert is not None:
+                line4 = ("Add Hop in: %s" % next_hop_alert)[:20]
+            else:
+                line4 =("     ")[:20]
 
         lcd.clear()
         lcd.cursor_pos = (0, 0)
