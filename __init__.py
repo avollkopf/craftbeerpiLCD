@@ -376,18 +376,21 @@ def show_fermentation_multidisplay(refresh, charmap):
         sensor2_of_fermenter = int(cbpi.cache.get("fermenter").get(value.id).sensor2)
         sensor2_type = cbpi.cache.get("sensors").get(sensor2_of_fermenter).type
         print("Sensor Type %s" % sensor2_type)
-        if (sensor2_type == "iSpindel"):
-            sensor2_data_type = cbpi.cache.get("sensors").get(sensor2_of_fermenter).config["sensorType"]
-            print("Sensor2 Data Type %s" % sensor2_data_type) 
-            if (sensor2_data_type == "Gravity"):
-                sensor2_data_unit = cbpi.cache.get("sensors").get(sensor2_of_fermenter).config["unitsGravity"]
-                print("Sensor2 Units: %s" % sensor2_data_unit)
-                gravity_sensor=True
-                try:
-                    current_gravity_value = (cbpi.get_sensor_value(value.sensor2))
-                except:
-                    current_gravity_value = None
-
+        try:
+            if (sensor2_type == "iSpindel"):
+                sensor2_data_type = cbpi.cache.get("sensors").get(sensor2_of_fermenter).config["sensorType"]
+                print("Sensor2 Data Type %s" % sensor2_data_type) 
+                if (sensor2_data_type == "Gravity"):
+                    sensor2_data_unit = cbpi.cache.get("sensors").get(sensor2_of_fermenter).config["unitsGravity"]
+                    print("Sensor2 Units: %s" % sensor2_data_unit)
+                    gravity_sensor=True
+                    try:
+                        current_gravity_value = (cbpi.get_sensor_value(value.sensor2))
+                    except:
+                        current_gravity_value = None
+        except:
+            current_gravity_value = None
+        pass
         # get the state of the heater of the current fermenter, if there is none, except takes place
         try:
             heater_of_fermenter = int(cbpi.cache.get("fermenter").get(value.id).heater)
@@ -483,14 +486,14 @@ def is_fermenter_step_running():
 
 def show_standby(ipdet, cbpi_version, charmap):
     lcd.cursor_pos = (0, 0)
-    lcd.write_string(("CraftBeerPi %s" % cbpi_version).ljust(20))
+    lcd.write_string((u"CraftBeerPi %s" % cbpi_version).ljust(20))
     lcd.cursor_pos = (1, 0)
     lcd.write_string(
-        ("%s" % (cbidecode(cbpi.get_config_parameter("brewery_name", "No Brewery"), charmap))).ljust(20)[:20])
+        (u"%s" % (cbidecode(cbpi.get_config_parameter("brewery_name", "No Brewery"), charmap))).ljust(20)[:20])
     lcd.cursor_pos = (2, 0)
-    lcd.write_string("IP: %s" % ipdet.ljust(20)[:20])
+    lcd.write_string(u"IP: %s" % ipdet.ljust(20)[:20])
     lcd.cursor_pos = (3, 0)
-    lcd.write_string(strftime("%Y-%m-%d %H:%M:%S", time.localtime()).ljust(20))
+    lcd.write_string(strftime(u"%Y-%m-%d %H:%M:%S", time.localtime()).ljust(20))
     pass
 
 
