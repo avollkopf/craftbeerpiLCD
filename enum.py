@@ -18,6 +18,7 @@
 
 """Python enumerations."""
 
+from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 import sys
@@ -96,7 +97,7 @@ class EnumMetaclass(type):
         # on the attribute name, which must be Python identifiers.
         return '<{0} {{{1}}}>'.format(cls.__name__, COMMASPACE.join(
             '{0}: {1}'.format(value, key)
-            for key, value in sorted(list(cls._enums.items()), key=itemgetter(1))))
+            for key, value in sorted(cls._enums.items(), key=itemgetter(1))))
 
     def __iter__(cls):
         for value in sorted(cls._enums.values()):
@@ -260,7 +261,7 @@ IntEnum = IntEnumMetaclass(str('IntEnum'), (Enum,), {
 
 if str is bytes:
     # Python 2
-    STRING_TYPE = str  # noqa: F821
+    STRING_TYPE = basestring  # noqa: F821
 else:
     # Python 3
     STRING_TYPE = str
@@ -283,7 +284,7 @@ def _make(enum_class, name, source):
     # .items() attribute.  Because of the way enumerate() works, here we have
     # to swap the key/values.
     try:
-        source = _swap(list(source.items()))
+        source = _swap(source.items())
     except (TypeError, AttributeError):
         source = enumerate(source, start=1)
     for i, item in source:

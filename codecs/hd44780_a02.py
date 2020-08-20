@@ -3,6 +3,7 @@
 The HD4480-A02 character table.
 """
 # flake8: noqa
+from __future__ import print_function, division, absolute_import, unicode_literals
 
 # Character shown if no mapping was found
 replacement_char = 0x20  # SPACE

@@ -31,6 +31,11 @@ After that a reboot is necessary.
 
 ## Configuration
 
+Update 2020-08-20
+- Reverted some changes for python3 back as they were not required for python3 compatibility
+- Version is now running under python2 and python3 based craftbeerpi3
+- Another bugfix with respect to the gravity function
+
 Update 2020-08-16
 - Added support for hop addition countdown timers
 - Boil step name has to be set to 'Boil'

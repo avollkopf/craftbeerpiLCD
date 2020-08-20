@@ -20,6 +20,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
+from __future__ import print_function, division, absolute_import, unicode_literals
 
 from collections import namedtuple
 
@@ -125,7 +126,7 @@ class CharLCD(BaseCharLCD):
     def _init_connection(self):
         # Setup GPIO
         GPIO.setmode(self.numbering_mode)
-        for pin in list([_f for _f in self.pins if _f])[:-1]:
+        for pin in list(filter(None, self.pins))[:-1]:
             GPIO.setup(pin, GPIO.OUT)
         if self.pins.backlight is not None:
             GPIO.setup(self.pins.backlight, GPIO.OUT)
